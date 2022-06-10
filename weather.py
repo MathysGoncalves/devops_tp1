@@ -1,10 +1,16 @@
-import requests, json, os
+import requests, os
+from flask import Flask
+from flask import request
 
 base_url = "http://api.openweathermap.org/data/2.5/weather?"
+app = Flask(__name__)
 
-def get_wheather(lat, lon, api_key):
-
-    complete_url = base_url + "lat=" + str(lat) + "&lon=" + str(lon) + "&appid=" + str(api_key)
+@app.route('/')
+def get_wheather():
+    lat = request.args.get("lat")
+    lon = request.args.get("lon")
+    print("-------------->", lat, lon)
+    complete_url = base_url + "lat=" + str(lat) + "&lon=" + str(lon) + "&appid=" + str(os.environ.get('API_KEY'))
     response = requests.get(complete_url)
     x = response.json()
     if x["cod"] != "404":
@@ -12,8 +18,10 @@ def get_wheather(lat, lon, api_key):
         print(y["temp"])
     else : 
         print("Try another coord")
+    return str(y["temp"])
 
 
 if __name__ == '__main__':
 
-    get_wheather(os.environ.get('LAT'), os.environ.get('LONG'), os.environ.get('API_KEY'))
+    app.run(port = 8081,debug=True)
+    get_wheather()
