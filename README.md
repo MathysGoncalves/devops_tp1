@@ -1,5 +1,5 @@
 ---
-title: TP1 DevOps - Docker
+title: TP DevOps - Docker
 author: Mathys Goncalves
 geometry: margin=10cm
 ---
@@ -116,3 +116,56 @@ docker run --rm -i hadolint/hadolint < Dockerfile
     Status: Downloaded newer image for hadolint/hadolint:latest
 
 ```
+
+</br>
+
+# TP2 DevOps - Github Actions
+
+For TP2, we will start from the work done in TP1. We will modify the script so that the user can retrieve the temperature using an API made with Flask.
+ 
+We set a new repo on Docker Hub *mathysgoncalves/efrei-devops-tp2*.
+
+</br>
+
+The next goal is to use Github Actions to automate certain processes. In the *main.yaml*:
+
+```yaml
+name: GitHub Actions Weather API
+on: [push]
+jobs:
+  push_to_registry:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+      
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+      
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: mathysgoncalves/efrei-devops-tp2
+      
+      - name : Hadolint
+        uses: hadolint/hadolint-action@v2.0.0
+        with:
+          dockerfile: Dockerfile
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+```
+
+- First we need to checkout the repo before executing the other steps.
+- Then we can login to Docker Hub using the token and username registered in Secrets on Github.
+- Then we can use Hadolint to check the validity of our image and good practices.
+- Finally we can push our Docker image and change the tag.
